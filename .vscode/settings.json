@@ -1,0 +1,4 @@
+{
+    "python.formatting.provider": "black",
+    "python.pythonPath": "/home/jens/git/a-tale-of-event-loops/venv/bin/python3"
+}
