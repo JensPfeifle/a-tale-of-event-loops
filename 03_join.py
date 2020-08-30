@@ -17,6 +17,9 @@ def coro():
 def join(task):
     # awaitable that is notified when a task completes
     result = yield ("join", task)
+    if isinstance(result, Exception):
+        print(f"    join: got exception {repr(result)}")
+        raise result
     return result
 
 
@@ -74,7 +77,10 @@ def run_until_complete(task):
                     tasks.append((t, returnval))
             except Exception as exp:
                 # catch all to prevent loop exit
-                print(exp)
+                print(repr(exp))
+                # send exception into tasks which were waiting on this one
+                for t in watch[task]:
+                    tasks.append((t, exp))
             else:
                 if data:
                     req, t = data
