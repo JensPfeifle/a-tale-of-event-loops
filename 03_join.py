@@ -16,7 +16,8 @@ def coro():
 @coroutine
 def join(task):
     # awaitable that is notified when a task completes
-    yield ("join", task)
+    result = yield ("join", task)
+    return result
 
 
 @coroutine
@@ -35,6 +36,7 @@ async def helloworld(repeat):
         await coro()
         print(f"  hello: back from await {n}")
     print("  hello: finished")
+    return "hello"
 
 
 async def main():
@@ -43,7 +45,8 @@ async def main():
     child = await spawn(helloworld(5))
     # now we wait for child to finish before exiting
     print("  main: join child")
-    await join(child)
+    result = await join(child)
+    print(f"  main: got result {result}")
     print("  main: finished")
 
 
@@ -63,11 +66,12 @@ def run_until_complete(task):
                 print(f"loop: send {data} into {task.__name__}")
                 data = task.send(data)
                 print(f"loop: received {data} from {task.__name__}")
-            except StopIteration:
+            except StopIteration as res:
                 # task finished
+                returnval = res.value
                 # schedule tasks which were waiting on this one
-                for t in watch.pop(task, []):
-                    tasks.append((t, None))
+                for t in watch[task]:
+                    tasks.append((t, returnval))
             except Exception as exp:
                 # catch all to prevent loop exit
                 print(exp)
